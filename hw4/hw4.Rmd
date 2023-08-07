@@ -1,0 +1,83 @@
+---
+title: "Homework 4"
+author: "Christopher Bussen"
+date: "2023-02-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+1. Read the data file: Roller_Coasters_Data.csv. How many observations do we have in this data?
+```{r}
+coasters <- read_csv("roller_coasters_data.csv")
+count(coasters)
+```
+
+
+2. Get a glimpse of the data. How many variables do we have in the data?
+```{r}
+glimpse(coasters)
+ncol(coasters)
+```
+
+3. Create a bar plot of Design of Roller Coasters. Use a few sentences to summarize your finding based on the plot. 
+```{r}
+table(coasters$Design)
+barplot(table(coasters$Design), col = "orange", las = 2, main = "Distrubution of Roller Coaster Designs")
+```
+
+From this bar plot, we can clearly see that sit down is the most common design type for a roller coaster in this dataset. Next is inverted at about one fifth of the count of sit down, but still much more common than the remaining types. After this, there are dimension, flying, pipeline, stand up, and suspended, whose counts are all less than ten. Therefore, they are rather uncommon in our data.
+
+4. Create a pie chart of Type of Roller Coasters. Use one sentence to summarize your finding based on the plot. 
+```{r}
+table(coasters$Type)
+pie(table(coasters$Type), main = "Distribution of Roller Coaster Type", col = c("red", "blue"))
+```
+
+From this pie chart, we can see that steel is the more common type of roller coaster, making up around two thirds of the observations.
+
+5. Create a histogram of Speed of Roller Coasters. Comment on the distribution of the histogram. You should focus on shape, center, spread, and if there are any unusual features. 
+```{r}
+hist(coasters$Speed, main = "Distribution of Roller Coaster Speed", xlab = "Speed", col = "pink")
+```
+
+This histogram appears to be mostly symmetric and is unimodal. Additionally, in terms of the measure of center, the median is likely somewhere in the 50 - 60 range. Finally, for spread the range is around 100, with the minimum being around 20 and the maximum around 120. There do not appear to be any unusual features in this histogram except for a potential outlier around 120.
+
+6. Create a boxplot of Speed by Design. Comment on the distributions of maximum speed among different designs of roller coasters.  
+```{r}
+par(mar = c(6.5, 6.5, 0.5, 0.5), mgp = c(5, 1, 0))
+boxplot(coasters$Speed ~ coasters$Design, las=2, col = "purple", xlab = "Design", ylab = "Speed")
+```
+
+The design type with the highest maximum speed according to the boxplot is sit down (which also has the lowest maximum speed). Next would be 4th dimension, and as we can see from the box plot, there is only one observation. This is the same for pipeline and suspended. Aside from these, the next highest maximums in order come from inverted, stand up, and flying. Furthermore, the designs with the largest spread are inverted and sit down (with sit down having a similar IQR but a much larger range). Additionally, the highest median is inverted, closely followed by sit down. Finally, sit down is the only type that has several outliers, including some both high and low. 
+
+7. Create a boxplot of Speed by Age_Group. Comment on the distributions of maximum speed among different age groups of roller coasters.  
+```{r}
+boxplot(coasters$Speed ~ coasters$Age_Group, col = "cyan", xlab = "Age Group", ylab = "Speed")
+```
+
+From these boxplots, we can see the distributions of the three different age groups of roller coasters (older, middle, and newer). We can clearly see that as the roller coasters get newer, the maximum speed continues to increase (both with the maximum value and medians). The maximum speed for the newer category seems to be about 1.5 times larger than the maximum for the older category. Additionally, the spread of the speed increases as well with newer roller coasters. Each age group also has outliers as well, but the outliers for the older group are closer to the rest of the data.
+
+8.a. Create a scatterplot of Speed (y) against Height. Comment on the scatterplot.
+```{r}
+plot(coasters$Speed ~ coasters$Height, xlab = "Coaster Height", ylab = "Coaster Speed")
+```
+
+As we can see from the scatterplot above, there tends to be a strong positive correlation between the height of a roller coaster and the speed of the roller coaster. In other words, the plot indicates that as height increases, so will speed.
+
+b. Create a scatterplot of Speed (y) against Drop
+```{r}
+plot(coasters$Speed ~ coasters$Drop, xlab = "Drop", ylab = "Coaster Speed")
+```
+
+
+c.  Which variable (Height or Drop) better predicts the maximum speed? Why?
+
+I would say that drop better predicts the maximum speed because the points on the scatterplot are more tightly packed and are all closer to where the line of best fit would be (very strong positive correlation). On the other hand, while the height and speed do give a strong positive correlation, it does not appear to be as strong as drop. Furthermore, just going off of real world experience, I feel like the size of drops generally has had a larger influence on speed than height when I go on roller coasters.

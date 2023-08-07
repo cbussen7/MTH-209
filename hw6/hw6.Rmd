@@ -1,0 +1,178 @@
+---
+title: "Homework 6"
+author: "Christopher Bussen"
+date: "2023-03-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+1. Read the data file unpopular_songs.csv using the read_csv() function in tidyverse and call this data frame songs. 
+
+```{r}
+songs <- read_csv("unpopular_songs.csv")
+```
+
+
+2. Get a glimpse of the data and indicate the number of observations and variables in the data. 
+
+```{r}
+glimpse(songs)
+```
+
+In the songs dataset, there are 10,877 observations (seen from the number of rows) and 17 variables (seen from the number of columns). 
+
+3. Find how many songs have danceability higher than the median danceability, energy lower than the median energy, loudness lower than the median loudness, speechiness higher than the median speechiness, and popularity is 1.
+
+```{r}
+# median(songs$danceability) 
+# median(songs$energy) 
+# median(songs$loudness)
+# median(songs$speechiness)
+
+count(filter(songs, danceability > median(danceability) & 
+               energy < median(energy) & 
+               loudness < median(loudness) & 
+               speechiness > median(speechiness) & 
+               popularity == 1))
+```
+
+There are a total of 288 songs in this dataset that have a danceability higher than the median danceability, energy lower than the median energy, loudness lower than the median loudness, speechiness higher than the median speechiness, and a popularity of 1.
+
+4. Sort the data frame songs by popularity, duration_ms via descending order, and key, and save the result back to the original data frame. Then only print the first 5 songs.   
+
+```{r}
+songs <- arrange(songs, popularity, desc(duration_ms), key) 
+head(songs, 5)
+```
+
+
+5. Change the data type of popularity to a factor in the data frame songs and create a boxplot of the distribution of duration_ms by popularity. Discuss the distribution of durations_ms by popularity.
+
+```{r}
+class(songs$popularity)
+songs$popularity <- as.factor(songs$popularity)
+class(songs$popularity)
+
+ggplot(songs, aes(x = popularity, y = duration_ms)) + 
+  geom_boxplot(fill = "red") + 
+  scale_y_continuous(breaks = seq(0, 3000000, by = 500000)) + 
+  labs(title = "Effect of Popularity on a Song's Duration", x = "Popularity Level", y = "Song Duration (ms)") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From this group of boxplots, we cannot see a whole lot because of the outliers on the high end that force the boxplots to zoom out. However, it does appear that as popularity level increases, the number of outliers generally tends to decrease. Additionally, it appears that as popularity level increases, the range from Q1-1.5IQR to Q3+1.5IQR decreases. I will now create a new set of boxplots to better show the data.
+
+```{r}
+ggplot(songs, aes(x = popularity, y = duration_ms)) + 
+  geom_boxplot(fill = "red") + 
+  scale_y_continuous(breaks = seq(0, 750000, by = 150000), limits = c(0, 750000)) + 
+  labs(title = "Effect of Popularity on a Song's Duration", x = "Popularity Level", y = "Song Duration (ms)") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+For these boxplots, I decided to exclude any songs longer than 750,000 ms to prevent the boxplots from showing extremely high outliers. From these plots, we can see that the IQR for most levels of popoularity are not super different, except for popularity levels 16, 17, and 18 which are all much lower. Additionally, we can see that the number of outliers decreases (although somewhat inconsistently) after popularity level 3. Additionally, the medians of every popularity level is somewhere between 150,000 ms and 225,000 ms.
+
+6. Create a boxplot of the distribution of instrumentalness by popularity. Discuss the distribution of instrumentalness by popularity. 
+
+```{r}
+ggplot(songs, aes(x = popularity, y = instrumentalness)) + 
+  geom_boxplot(fill = "blue") + 
+  labs(title = "Effect of Popularity on a Song's Instrumentalness", x = "Popularity Level", y = "Instrumentalness") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+As we can see from these boxplots, every popularity level has a median instrumentalness either of 0 or close to 0. This means that for all popularity levels, songs tend to not be close to instrumentals. Additionally, some of the lower popularity levels have much larger IQRs than the higher popularity levels. We can also see that outside of the first few popularity levels, there are normally a large amount of outliers. Popularity levels 17 and 18 are the only levels without a song close to an instrumental value of 1.0. Finally, it is worth noting that for songs with popularity levels of 16, 17, or 18, almost all of them are the opposite of instrumentals.
+
+7. What do you find based on the boxplots in Questions 5 and 6. 
+
+Based on the boxplots from questions 5 and 6, we can see that the first few levels of popularity differ more in both song duration and instrumentalness. This is likely because the most unpopular songs vary greatly in things like genre and artists, and they can be meant for many different purposes (there are also many more songs with lower popularity levels). On the other hand, the last few levels of popularity differ a rather small amount in duration and instrumentalness. This leads me to believe that most of the more popular songs fit into similar categories because people find certain qualities in songs more appealing than others. For example, the first set of boxplots of song duration indicates that most popular songs are around 3 minutes and slightly over, while a song well over that mark is likely to be less popular. Additionally, we can see from the medians that most artists tend to make songs in the 3-4 minute range. Furthermore, the second set of boxplots indicates that songs that are closer to 100% instrumental are likely to be unpopular. On the other hand, people prefer songs that have way more vocals compared to instrumentals so these songs have a higher chance to be more popular.
+
+
+8. Create a histogram to show the distribution of instrumentalness and describe the distribution.
+
+```{r}
+ggplot(songs, aes(x = instrumentalness)) + 
+  geom_histogram(color = "black", fill = "coral", binwidth = .05) + 
+  labs(title = "Distribution of Instrumentalness of Songs", x = "Instrumentalness", y = "Number of Songs") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+This histogram appears to be skewed to the right and unimodal. The median is around 0, and the histogram has a minimum of 0 and a maximum of 1 (the range of values for instrumentalness is 0 to 1, with 0 being not instrumental at all and 1 being all instrumental). From this histogram, we can see that most of the data lies either on the very low or very high side of instrumentalness. More specifically, there is a rather small amount of data in the middle 50% of the range of instrumentalness, meaning that artists tend to make songs that are not at all instrumental or mostly instrumental rather than an even mix.
+
+9. Group the data frame songs by track_artist and find the corresponding median, Q3 - Q1, for danceability, energy, speechiness, acousticness, instrumentalness, liveness, valence, and counts for each track_artist. Save the result to unpopular_artists and sort the data frame via the descending order of counts. Print the top 10 unpopular artists and the corresponding information in unpopular_artists. Summarize your finding based on the result shown here. 
+
+```{r}
+unpopular_artists <- songs %>% 
+  group_by(track_artist) %>% 
+  summarize(
+    danceability_med = median(danceability),
+    danceability_IQR = IQR(danceability),
+    energy_med = median(energy),
+    energy_IQR = IQR(energy),
+    speechiness_med = median(speechiness),
+    speechiness_IQR = IQR(speechiness),
+    acousticness_med = median(acousticness),
+    acousticness_IQR = IQR(acousticness),
+    instrumentalness_med = median(instrumentalness),
+    instrumentalness_IQR = IQR(instrumentalness),
+    liveness_med = median(liveness),
+    liveness_IQR = IQR(liveness),
+    valence_med = median(valence),
+    valence_IQR = IQR(valence),
+    count = n()
+  )
+
+unpopular_artists <- arrange(unpopular_artists, desc(unpopular_artists$count))
+
+head(unpopular_artists, 10)
+
+```
+
+I found that the top 10 unpopular artists generally do not have a very large IQR for many of the variables included, meaning that some aspects of their music typically do not vary much. Additionally, I found that all of the top 10 unpopular artists on this list tend to have a somewhat large amount of songs, so the sample size of unpopular songs is not particularly small. These artists all generally vary in danceability median but tend to not be super high or super low. Energy, acousticness, and instrumentalness medians for these artists differ greatly, with some being close to 1 and others close to 0. Finally, liveness, speechiness, and valence  medians all tend to vary between artists but do not go super high. Overall, I would say that these entries do a good job of showing that there is not one specific factor that determines whether or not a song is unpopular.
+
+10. Create two new variables: instrumentalness_status and boringness in the data frame songs. The variable instrumentalness_status has the value "High" for the songs whose instrumentalness is higher than the mean instrumentalness, otherwise, it is "Low". The variable boringness is calculated by
+
+boringness = loudness + tempo + (energy * 100) + (danceability * 100)
+
+Hint: You can use this command ifelse(condition, value1, value2); it assigns value 1 to the new variable when the condition is TRUE. Otherwise, it assigns value 2 to the variable.  
+
+```{r}
+songs$boringness <- songs$loudness + songs$tempo + (songs$energy * 100) + (songs$danceability * 100)
+
+songs$instrumentalness_status <- ifelse(songs$instrumentalness > mean(songs$instrumentalness), "High", "Low")
+
+```
+
+
+11. Create a bar plot that shows the conditional distribution of instrumentalness_status by the popularity of songs. Comment on your barplot. 
+
+```{r}
+ggplot(songs, aes(x = popularity, fill = instrumentalness_status)) + 
+  geom_bar(position = "fill") +
+  scale_y_continuous(breaks = seq(0, 1, by = .2), labels = scales::percent) + 
+  labs(title = "Distribution of Instrumentalness Status by Song Popularity", x = "Popularity Level", y = "Percent") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From this barplot, we can see that regardless of popularity level, the percentage of songs with a high instrumentalness status will usually not be higher than around 25%. Additionally the percentage of songs with high instrumentalness status generally tends to slightly decrease as popularity level increases. Finally, we can see that for popularity levels 17 and 18, all of the songs have an instrumentalness status of low.
+
+12. Create a boxplot that shows the distribution of boringness by the popularity of songs. Comment on your boxplot. What did you find based on the boxplot?
+
+Hint: You should recall how this variable was calculated.  
+
+```{r}
+ggplot(songs, aes(x = popularity, y = boringness)) + 
+  geom_boxplot(fill = "orange") + 
+  labs(title = "Effect of Popularity on a Song's Boringness", x = "Popularity Level", y = "Boringness") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Based on how the boringness variable was calculated, I will assume that a higher boringness value means a song is less boring, while a low value is more boring. From these boxplots, we can see that most of the median boringness values for each of the popularity levels are generally close to each other (around 225-250). We can also see that for lower popularity levels, there are normally several outliers on the lower end, meaning that they have more instances of very boring songs. However, none of the popularity levels have outliers on the higher end. Additionally, as popularity level increases, the range of values of boringness generally decreases, becoming more consistent. As we get to the highest popularity levels, the IQR is slightly smaller and levels 17 and 18 have the highest medians. So, from these boxplots we can see that most artists tend to make songs that are not super boring, and more popular songs are slightly less boring than the rest.
+

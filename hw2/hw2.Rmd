@@ -1,0 +1,107 @@
+---
+title: "Homework 2"
+author: "Christopher Bussen"
+date: "2023-01-27"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1. Set the random seed to be 2022
+```{r}
+set.seed(2022)
+```
+
+2. Sample 200 values from 1:1000 (without replacement) and assign these values into a vector, v. 
+```{r}
+v <- sample(1:1000, 200)
+v
+```
+
+3. Find the 50th, 75th, 135th values in v at the same time. This means only one command is needed.
+```{r}
+v[c(50, 75, 135)]
+```
+
+4. Find the summary statistics of v.
+```{r}
+summary(v)
+```
+
+
+5. Delete the 11th, 17th, 23th, and 102th elements in v. 
+```{r}
+v <- v[-c(11, 17, 23, 102)]
+v
+```
+
+
+6. Generate a vector sequence with values from 7 to 15, assuming the increment is 0.5. Then assign this vector to w. 
+```{r}
+w <- seq(from = 7, to = 15, by = 0.5)
+w
+```
+
+
+7. Now, we have two vectors, v, and w. Can we add them together in R? Does it make sense to find the sum of these two vectors? Why or why not?  
+Yes, we can add the vectors together but the shorter vector (w) will recycle its values to make it the same length as the other vector (v). Therefore, it does not make sense to find the sum of these two vectors because they are not the same length as each other.
+
+8. Find the number of observations that are less than 80 in v. 
+```{r}
+sum(v < 80)
+```
+
+
+9. Check if any values in w are even numbers.
+```{r}
+any(w %% 2 == 0)
+```
+
+
+10. Create a vector of size 100 (no values) and assign it to z. 
+```{r}
+z <- numeric(100)
+# z <- rep(NA,100)
+```
+
+
+11. If the index in z is a multiple of 5, assign 1 to z. (e.g., If i = 0, 5, 10, ..., 100, z[i] = 1) This should be one command. 
+```{r}
+z[seq(from = 0, to = length(z), by = 5)] <- 1
+z
+```
+
+
+12. If the index in z is not a multiple of 5, assign "5" to z. 
+```{r}
+for (i in 0:length(z)) {
+  if(i%%5 !=0){
+    z[i] <- "5"
+  }
+}
+# z[(1:100 %% 5 !=0)] <- "5"
+z
+```
+
+
+13. Check the data type of z.
+```{r}
+typeof(z)
+```
+
+
+14. Use the summary() function to get the summary of z. Are you surprised by the result? Why or why not?
+```{r}
+summary(z)
+```
+Yes, I am surprised by the result because it did not provide the typical numerical information we often expect from the summary function (min, max, mean, quartiles). This is because the vector was changed to a character type due to adding "5" instead of 5 to the vector. As a result, summary just gives us length, class, and mode because it cannot compute numerical data.
+
+
+15. Convert the data type of z to a particular type so that you can find the numerical summary values. 
+```{r}
+z <- as.integer(z)
+z
+```
+

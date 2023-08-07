@@ -1,0 +1,127 @@
+---
+title: "Homework 3"
+author: "Christopher Bussen"
+date: "2023-02-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+First I will load in the tidyverse library
+```{r}
+library(tidyverse)
+```
+
+
+1. Read the data file: House_Rent_Dataset.csv. How many observations do we have in this data?
+```{r}
+houseRent <- read.csv("house_rent_dataset.csv")
+count(houseRent)
+```
+
+
+2. Use a function to read the first few rows of the data.
+```{r}
+head(houseRent)
+```
+
+
+3. Check the data type for Rent, AreaType, and FurnishingStatus.
+```{r}
+class(houseRent$Rent)
+class(houseRent$AreaType)
+class(houseRent$FurnishingStatus)
+```
+
+
+4.   
+a. Drop the observations in the data for which the AreaType is Built Area.
+```{r}
+table(houseRent$AreaType)
+houseRent <- houseRent[houseRent$AreaType != "Built Area",]
+table(houseRent$AreaType)
+
+# houseRent <- filter(houseRent, AreaType != "Built Area")
+```
+
+
+b. Change the data types of AreaType and FurnishingStatus to factor. 
+```{r}
+houseRent$AreaType <- as.factor(houseRent$AreaType)
+# class(houseRent$AreaType) <- "factor"
+class(houseRent$AreaType)
+houseRent$FurnishingStatus <- as.factor(houseRent$FurnishingStatus)
+class(houseRent$FurnishingStatus)
+```
+
+
+5.   
+a. Find the frequency distribution of Point_of_Contact. 
+```{r}
+table(houseRent$Point_of_Contact)
+```
+
+
+b. Have a discussion on any issues you see in part a and provide a solution to it.
+Some issues that I see in part a are that there is Contact Owner and Contact_Owner. This could be fixed by changing the one instance of Contact_Owner to Contact Owner so that the count is more accurate. Additionally, having each category start with contact is a little redundant, so we could remove contact from the start of each and just have it be Agent, Builder, and Owner.
+
+c. Change the data type of Point_of_Contact. 
+```{r}
+class(houseRent$Point_of_Contact)
+houseRent$Point_of_Contact <- as.factor(houseRent$Point_of_Contact)
+class(houseRent$Point_of_Contact)
+```
+
+
+6.   
+a. Find the 5 summary statistics of Rent
+```{r}
+summary(houseRent$Rent)
+```
+
+      
+b. Find the maximum and minimum rent in the data and get the corresponding information for Size, Floor, AreaType, and FurnishingStatus. 
+```{r}
+max(houseRent$Rent)
+min(houseRent$Rent)
+houseRent[houseRent$Rent == max(houseRent$Rent), c(4, 5, 6, 9)]
+houseRent[houseRent$Rent == min(houseRent$Rent), c(4, 5, 6, 9)]
+```
+
+
+7. You should find that the mean rent and the median rent are very different. Explain possible reasons for such a situation.
+```{r}
+mean(houseRent$Rent)
+median(houseRent$Rent)
+```
+Yes, as we can see above (and from the summary statistics question), the mean is around 35,004 while the median is 16,000. One likely reason for this is that there are several very high outliers (such as the maximum which is 3,500,000) that drag the mean way up. However, the median is not as drastically affected by high outliers, so it is much lower as a result. Additionally, the vast majority of the data is probably around the median and able to cancel out the outliers when finding the median.
+
+8. Create a contingency table for AreaType and FurnishingStatus. Write one or two sentences to summarize your finding. 
+```{r}
+table(houseRent$AreaType, houseRent$FurnishingStatus)
+```
+Because we deleted all entries of the data that had Built Area for AreaType earlier, we are now left with two categories - Carpet Area and Super Area. The data is relatively even between the two with Super Area being slightly more common. For FurnishingStatus, a little under half of them are semi-furnished, slightly less are unfurnished, and the small amount that remains are furnished.
+
+9. Find the five summary statistics of Rent given that AreaType is Super Area.
+```{r}
+# temp <- houseRent[houseRent$AreaType == "Super Area",]
+# table(temp$AreaType)
+# summary(temp$Rent)
+# used commented lines above to check the numbers produced below
+summary(houseRent$Rent[houseRent$AreaType == "Super Area"])
+```
+
+
+10. Find the five summary statistics of Rent given that the City is Mumbai, and The Bathroom is 3.
+```{r}
+# temp <- houseRent[houseRent$City == "Mumbai",]
+# table(temp$City)
+# temp2 <- temp[temp$Bathroom == 3,]
+# table(temp2$City, temp2$Bathroom)
+# summary(temp2$Rent)
+# once again, used lines above to check
+summary(houseRent$Rent[houseRent$City == "Mumbai" & houseRent$Bathroom == 3])
+```
+

@@ -1,0 +1,83 @@
+---
+title: "Homework 1"
+author: "Christopher Bussen"
+date: "2023-01-20"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Character - 1
+
+A character object is used to store text, letters, or words (strings) in R.
+
+```{r}
+x <- "Hello"
+y <- "UD students!"
+class(x) # we can use class() function to obtain the data type
+```
+
+```{r}
+nchar(x) # use nchar() to count the number of characters
+```
+
+**Note:**When defining strings, double quotes " " and single quotes ' ' are interchangeably but double quotes are preferred (and character constants are printed using double quotes), so single quotes are normally only used to delimit character constants containing double quotes R Documentation ([2020](https://ying-ju.github.io/teaching/MTH209/Lesson2.html#ref-rquotes2020)).
+
+## Character - 2
+If we want to combine two strings into one string, we can use paste() or paste0() function.
+
+```{r}
+paste(x,y)
+```
+
+```{r}
+paste(x,y,sep=",")
+```
+
+```{r}
+paste(x,y,sep=", ")
+```
+
+```{r}
+paste(x, ", ", y)
+```
+
+```{r}
+paste0(x,y)
+```
+
+These two functions could be very useful.
+
+## Character - 3
+Here we give one advanced example.
+
+```{r}
+allfiles1 <- paste("file_", 1:5)
+allfiles2 <- paste("file_", 1:5, collapse = "_")
+allfiles3 <- paste("file", 1:5, sep = "_")
+allfiles1
+```
+
+```{r}
+allfiles2
+```
+
+```{r}
+allfiles3
+```
+
+## Integer
+An integer object is used to store numeric data without decimals.
+
+```{r}
+x2 <- c(-3.13, 2.47, 6, -1.5, 4.29, 2.72, 1, 0, 3.85)
+x3 <- as.integer(x2) # only remain the integers
+x3
+```
+
+```{r}
+class(x3)
+```
+

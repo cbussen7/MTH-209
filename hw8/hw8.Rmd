@@ -1,0 +1,180 @@
+---
+title: "Homework 8"
+author: "Christopher Bussen"
+date: "2023-04-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+
+1. Read the data file, adult.data using the read_csv() function in tidyverse. This data don't have column names included. You must indicate the column names when reading the data (in the same order I listed above). 
+
+```{r}
+adult <- read_csv("adult.data", col_names = c("age", "workclass", "fnlwgt", "education", "education_num", "martial_status", "occupation", "relationship", "race", "sex", "captial_gain", "captial_loss", "hours_per_week", "native_country", "income_level"))
+```
+
+
+2. Subset the data to use only the income information from people in the United States. You should use this subset data for the rest of the questions. 
+
+```{r}
+adult <- filter(adult, adult$native_country == "United-States")
+```
+
+
+3. Get a glimpse of the data. Study the distribution of income_level. 50K is 50000 US dollars. Note: You should notice that there were more people whose income was less than 50K. When we study the factors that may impact the income level, we need to consider this and consider how to have "fair" comparisons. 
+
+```{r}
+glimpse(adult)
+
+table(adult$income_level)
+ggplot(adult, aes(x=income_level)) + 
+  geom_bar(fill="blue") + 
+  labs(title = "Distribution of Income Level in United States", x = "Income Level", y = "Number of People") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+As we can see from both the table and the bar graph above, there are far more people in the dataset who have an income of less than or equal to \$50,000 compared to the number of people with an income greater than \$50,000. In fact, there are almost three times as many people in this dataset who make less than or equal to \$50,000 when compared to those in the dataset who make more than \$50,000.
+
+4. Create a new variable age_group using age by the following categories:
+
+20-, 20-30, 30-40, 40-50, 50-60, 60-70, 70-80, 80+ 
+
+20-: the age is less than 20 and 80+: the age is greater than or equal to 80
+
+20-30: 20 <= age < 30, 30-40: 30 <= age < 40, etc.
+
+```{r}
+adult <- adult %>% 
+  mutate(age_group = cut(age, breaks = c(0, 20, 30, 40, 50, 60, 70, 80, Inf),
+                         right = FALSE,
+                         labels = c("20-", "20-30", "30-40", "40-50", "50-60", "60-70", "70-80", "20-")))
+table(adult$age_group)
+```
+
+5. Use these three variables: age_group, hours_per_week, and income_level, to study the impact of the first two variables on the income level. You should include your analysis. 
+
+```{r}
+table(adult$income_level, adult$age_group)
+
+ggplot(adult, aes(x = age_group, fill = income_level)) + 
+  geom_bar() +
+  labs(title = "Relationship between Age Group and Income Level", x = "Age Group", y = "Number of People") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+To study the impact of age group on income level, I decided to create a contingency table as well as a stacked bar graph. From the contingency table, we can see that the number of people who make less than or equal to \$50,000 is greater than the number of those who make more than \$50,000 for each age group. However, we can see that especially for the 20- and 20-30 age groups, the number of people who make less than or equal to $50,000 is by far greater than the number of people who make more. This is likely due to the fact that most young people start out with a lower salary and it increases as they work for longer. For the older age groups after the first two, the number people in each income level get closer, with the 50-60 age group having the smallest difference. However, this difference is still around 900 more people who make less than or equal to \$50,000, showing how far more people overall make less than or equal to \$50,000, regardless of age group. The stacked bar chart does a good job of displaying these trends in a more visually appealing way. From this chart, it is easier to see how the difference between income levels decreases as age group increases, and then the difference increases again with the last two age groups.
+
+```{r}
+ggplot(adult, aes(x = income_level, y = hours_per_week)) + 
+  geom_boxplot(fill = "coral") + 
+  labs(title = "Relationship between Hours Worked Per Week and Income Level", x = "Income Level", y = "Hours Per Week") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+median(filter(adult, adult$income_level == "<=50K")$hours_per_week)
+median(filter(adult, adult$income_level == ">50K")$hours_per_week)
+```
+
+To study the relationship between hours per week and income level, I decided to create boxplots of hours per week for each of the two income levels. From these boxplots, we can see that both income levels have the same median of hours per week, at 40 hours. This makes sense because regardless of pay, full-time jobs are normally considered to be 40 hour weeks. However, we can see that the middle 50% of hours per week is higher for people who make more than \$50,000 than it is for people who make less than or equal to \$50,000. Additionally, we can see that the IQR and spread from Q1-1.5IQR to Q3+1.5IQR are both also greater for people who make over \$50,000. One thing worth noting that this tells us is it is more common for people who make more than \$50,000 to vary in their hours per week without being outliers (both on the low and high ends) whereas the income level of less than or equal to $50,000 sees much less variation in hours worked per week. Finally, we can see that there tend to be more outliers, both high and low, in hours worked per week for people who make less than or equal to \$50,000.
+
+6. The document provided no information about the variable: education_num. Can you use another variable (s) in the data to determine the meaning of these values? Indicate the education level for each number in this variable. 
+
+```{r}
+nlevels(as.factor(adult$education))
+nlevels(as.factor(adult$education_num))
+# filter(adult, education_num==16)$education -- switched education_num and used this line to figure out what each number represents
+
+```
+
+Yes, we can use the variable education to determine the meaning of the variable education_num. As we can see from using the nlevels function above and changing the education variable to a factor, it has 16 unique values. The same can be said of education_num, which contains numbers 1-16. So, we can see that education_num is just a numeric way of representing the education variable. For this variable, 1 represents "Preschool", 2 is "1st-4th", 3 is "5th-6th", 4 is "7th-8th", 5 is "9th", 6 is "10th", 7 is "11th", 8 is "12th", 9 is "HS-grad", 10 is "Some-college", 11 is "Assoc-voc", 12 is "Assoc-acdm", 13 is "Bachelors", 14 is "Masters", 15 is "Prof-school", and 16 is "Doctorate". 
+
+7. Now, you should find that there are many categories in the variable: education and some categories have fewer counts. Decide how you could regroup these categories by yourself and use the variable education after you regroup categories to study its impact on the income level. You should explain your approach, i.e., why certain categories should be grouped.  
+
+```{r}
+table(adult$education)
+
+regroup_adult_ed <- adult %>% 
+  mutate(education = recode(education, 
+                            "9th"= "Some-HS", "10th"= "Some-HS", "11th"= "Some-HS", "12th" = "Some-HS",
+                            "Assoc-acdm" = "Associates", "Assoc-voc" = "Associates",
+                            "Preschool" = "Pre-HS", "1st-4th" = "Pre-HS", "5th-6th" = "Pre-HS", "7th-8th" = "Pre-HS",
+                            "Masters" = "Post-grad", "Doctorate" = "Post-grad", "Prof-school" = "Post-grad"
+  ))
+
+table(regroup_adult_ed$education)
+```
+
+For this question, I decided to start with grouping together everything before high school (preschool through 8th grade) and calling it pre HS. This is because none of them had a large amount of people and I felt like high school was the first major milestone in terms of education received. From there, I decided to group together anything that was highschool education prior to graduating high school (9th-12th), AKA high school dropouts. I did this because I did not think there was much of a difference between someone dropping out in their freshman year versus their senior year. I then left HS grad and some college alone because they both had a good amount of people and I felt like they were good benchmarks in terms of education levels. After this, I decided to combine both types of associates degrees because I thought that it made the groups more consistent and easier to understand. I kept bachelors the same because it is one of the more popular educational routes. Finally, I grouped together masters, doctorate, and prof school because they are all just different types of post-grad schooling and none of them were particularly common on their own.
+
+```{r}
+ggplot(regroup_adult_ed, aes(x = education, fill = income_level)) + 
+  geom_bar() +
+  labs(title = "Relationship between Education and Income Level", x = "Type of Education", y = "Number of People") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+As the stacked bar chart shows us, for the lesser education groups such as pre-HS, some-HS and HS-grad, a very low proportion of people make more than \$50,000. This is not particularly surprising as they are not as educated as others. Both associates and some-college have slightly higher proportions of people in the higher income level, yet they are still not particularly high. However, when you get to bachelors and post-grad, you notice that a much higher proportion of people make more than \$50,000 - close to half for bachelors and well over half for post-grad. Thus, we can see overall that a higher level of education gives a better chance at higher income.
+
+8. Based on the data, give at least one reason why it is not worth analyzing the relationship between captial_gain and income level and captial_loss and income level. 
+
+```{r}
+table(adult$captial_gain)
+table(adult$captial_loss)
+```
+
+The main reason why it is not worth analyzing the relationship between capital gain/capital loss and income is because a vast majority of the observations are 0 for both variables (tables above show around 27,000 of 29,170 for each variable being 0). This would result in the distribution being heavily skewed and the data focused primarily on the low end. As a result, it would likely be very difficult to draw legitimate conclusions or make accurate predictions based on the data.
+
+9. Pick at least 2 variables from occupation, relationship, race, and sex to study their impact on the income level. You should talk about what you find based on your analysis. 
+
+I will look at the impacts of relationship and race on income level in this problem. I'm quite interested to look at how relationship relates to income level because many people today tend to always think of men/husbands as the breadwinners. However, I think this has started to shift at least slightly over the last few decades as women have become more accepted in the workforce and different higher-paying fields. I am also curious to look at race just because it plays a huge role in many aspects of life in the United States and many groups are consistently discriminated against. I'm curious to see if this discrimination is noticeable through income level as well.
+
+```{r}
+ggplot(regroup_adult_ed, aes(x = relationship, fill = income_level)) + 
+  geom_bar() +
+  labs(title = "Impact of Relationship on Income Level", x = "Relationship", y = "Number of People") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+As we can see from the bar chart above, husband is by far the most common relationship in the dataset, and slightly under half of them make more than \$50,000. While wife is the second least common relationship type in the dataset (meaning that many wives do not work), it is interesting to see that half of them make over \$50,000. Other than these two relationships, the rest are overwhelmingly in the lower income level, especially own-child.
+
+```{r}
+ggplot(adult, aes(x = race, fill = income_level)) + 
+  geom_bar() +
+  labs(title = "Distribution of Income Level by Race", x = "Race", y = "Number of People") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+From this stacked bar chart, we can first see that the vast majority of this dataset is made up of people who are classified as either black or white. White people have by far the highest proportion of people who make more than \$50,000, which I think most people would expect in America (proportion appears to be around 1/4). After them, black people have the next highest proportion of people with an income over \$50,000. Aside from white and black people, the rest of the listed races are made up almost only of people making less than or equal to \$50,000. 
+
+10. Name at least one thing I didn't mention above but studying could be good. (Not necessarily related to income level)
+
+One thing not mentioned above that could be worth studying is the relationship between sex and income level based on occupation (similar to above but more specific). This is because the wage gap is something that is a very popular and rather controversial point of debate in our society today, yet it is important to recognize that their could be other factors affecting the person's income other than just gender. Obviously, men and women are not always doing the same jobs and as a result will make different amounts of money. One way that we could reduce the impact of this variable when analyzing the relationship between gender and income level is to either group by occupations and calculate the average income for each gender (can't do with current dataset but would be interesting) or just filter by some of the more popular occupations and look at the distribution of income level by gender. I will provide an example below.
+
+```{r}
+table(adult$occupation)
+# exec-managerial is most common so will look at that
+
+ggplot(filter(adult, adult$occupation == "Exec-managerial"), aes(x = sex, fill = income_level)) + 
+  geom_bar() +
+  labs(title = "Income Level by Gender for Exec/Managerial Positions", x = "Gender", y = "Number of People") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+As we can see here, this stacked bar chart shows us that for the same type of occupation, far less females are in the higher income level compared to males (females closer to 1/4, males closer to 1/2). Additionally, it shows us that there are over double the amount of males in these professions compared to women. This could be very interesting and valuable information if analyzed for several occupations.
+
+Finally, I think marital status would be interesting to look at in relation to income. This is because marital status can often affect a person's ability to work. Additionally, if someone is married they might want to make more money in order to potentially be able to support a family in the future. I think it would also be interesting to look at the distribution of income level for widows, as many of them likely were not working prior to the death of their spouse and now are in need of a new source of income. As a result, I would be curious to see if there is any noticeable relationship between marital status and income level. 
+
+```{r}
+ggplot(adult, aes(x = martial_status, fill = income_level)) + 
+  geom_bar() +
+  labs(title = "Distribution of Income Level by Marital Status", x = "Marital Status", y = "Number of People") + 
+  theme(plot.title = element_text(hjust = 0.5), axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+As we can see from the figure above, the most common marital statuses are married-civ-spouse, never-maried, and divorced. Married-civ-spouse by far has the highest proportion of people making more than \$50,000, at a little under half. For every other marital status, the overwhelming majority of people make less than or equal to \$50,000. The same is true for widows (which I briefly mentioned above), and I believe this is likely because many of them have not been in the workforce for a long time. As a result, it can be rather difficult for them to get higher paying jobs which puts them in the lower income level.

@@ -1,0 +1,331 @@
+---
+title: "EDA: Wisconsin Covid-19"
+output: 
+  flexdashboard::flex_dashboard:
+    theme:
+      version: 4
+      bootswatch: lux
+      navbar-bg: "black"
+    orientation: columns
+    vertical_layout: fill
+    source_code: embed
+---
+
+<style>
+.chart-title {  /* chart_title  */
+   font-size: 16px;
+  }
+body{ /* Normal  */
+      font-size: 14px;
+  }
+</style>
+
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+```
+
+Basic Info
+===
+
+Column {data-width=550}
+---
+
+### Introduction - Get to know the data
+
+We conducted the exploratory data analysis for the Covid-19 data in Wisconsin in 2021. First we get a glimpse of the entire COVID-19 data. I will also provide the first 10 entries in the dataset for reference. Finally, I will give a glimpse into just the dataset for Wisconsin.
+
+```{r package_data}
+library(tidyverse)
+library(knitr)
+
+
+
+covid <- read_csv("COVID19.csv")
+glimpse(covid)
+head(covid, 10)
+
+covid <- covid %>% rename(country = administrative_area_level_1, 
+                    state = administrative_area_level_2, 
+                    county = administrative_area_level_3)
+
+#1 study wisconsin data
+df_state <- covid %>% filter(state == "Wisconsin")
+glimpse(df_state)
+```
+
+As the glimpse of the entire dataset shows, there are 30 variables and over 1.1 million observations. On the other hand, our glimpse for just the Wisconsin dataset shows 28 variables and just over 26,000 observations, making the data much more practical to handle and make general observations about.
+
+Column {data-width=450}
+---
+
+### Distribution of the cumulative number of confirmed cases on January 1, 2021.
+
+```{r drop_lat_long}
+#2 drop latitude & longitude
+df_state <- df_state %>% select(-c(latitude, longitude))
+```
+```{r hist1, fig.align='center', out.width="85%"}
+ggplot(df_state %>% filter(date=="2021-01-01"), aes(x=confirmed)) + 
+  geom_histogram(fill="orange", color="white", bins=30) + 
+  labs(title = "Distribution of Confirmed Cases by County in Wisconsin on January 1, 2021",
+       x = "Cumulative Number of Confirmed Cases", y = "Number of Counties") + 
+  scale_x_continuous(breaks = seq(0, 100000, by = 12500))
+```
+
+
+### Distribution of the cumulative number of confirmed cases on December 31, 2021.
+
+```{r hist2, fig.align='center', out.width="85%"}
+ggplot(df_state %>% filter(date=="2021-12-31"), aes(x=confirmed)) + 
+  geom_histogram(fill="orange", color="white", bins=30) + 
+  labs(title = "Distribution of Confirmed Cases by County in Wisconsins on December 31, 2021",
+       x = "Cumulative Number of Confirmed Cases", y = "Number of Counties") + 
+  scale_y_continuous(breaks = seq(0, 200000, by = 25000))
+```
+
+EDA-1
+===
+
+Column {.tabset data-width=550}
+---
+
+### Outliers 
+
+We study the *outliers* in the distribution of the cumulative number of confirmed cases to know which counties have the highest number of cumulative number of confirmed cases at the beginning of year or in the end of 2021.
+
+```{r comparison}
+first <- df_state %>% 
+  filter(date == "2021-01-01") %>%
+  filter(confirmed == max(confirmed)) %>% 
+  select(county, confirmed, deaths, people_vaccinated, people_fully_vaccinated, population)
+
+last <- df_state %>% 
+  filter(date == "2021-12-31") %>% 
+  filter(confirmed == max(confirmed)) %>% 
+  select(county, confirmed, deaths, people_vaccinated, people_fully_vaccinated, population)
+```
+
+```{r show_table}
+result <- rbind.data.frame(first, last)
+
+kable(result, rownames = FALSE, 
+              col.names = c("County", "Cumulative Cases", "Cumulative Deaths", "No of Vaccinated", "No of Fully Vaccinated", "Population"))
+#options = list(columnDefs = list(list(className = 'dt-center', targets = 1:5), pageLength = 5)
+#))
+```
+
+We found that the maximum cumulative number of confirmed cases at the beginning of the year occurred in the 
+`r first$county` county and in the end of the year in `r last$county` county. The same is also true for cumulative number of deaths.
+
+### Summary on 1/1/2021
+
+Here we will study the COVID19 distribution at the start of 2021, looking at the data for each county from January 1st. As many people would likely expect, the cumulative number of cases generally increases as county population increases. Milwaukee, Dane, and Waukesha counties have the three highest populations in Wisconsin and they also have the three highest cumulative cases. We can also see that deaths are not as tightly correlated to population. 
+
+```{r summary1}
+Begin2021 <- df_state %>% 
+  filter(date == "2021-01-01") %>% 
+  select(county, confirmed, deaths, population) %>% arrange(desc(population))
+
+DT::datatable(Begin2021, colnames = c("County", "Cumulative Confirmed Cases", "Cumulative Deaths", "Population"))
+```
+
+
+### Summary on 12/31/2021
+
+Finally, we will study the COVID19 distribution at the end of 2021, looking at the data for each county from December 31st. Once again, we see a similar trend where cumulative cases grow with population. Milwaukee has almost double the population of the next biggest county (Dane) and has over double the amount of cases. Milwaukee also has by far the highest number of deaths, which could be partially due to the fact that it is a very dense county compared to the rest of the counties.
+
+```{r summary2}
+End2021 <- df_state %>% 
+  filter(date == "2021-12-31") %>% 
+  select(county, confirmed, deaths, population) %>% arrange(desc(population))
+
+DT::datatable(End2021, colnames = c("County", "Cumulative Confirmed Cases", "Cumulative Deaths", "Population"))
+```
+
+
+Column {data-width=450}
+---
+
+### Confirmed Cases versus Population
+
+```{r pop_confirmed, fig.align='center', fig.height=4}
+ggplot(End2021, aes(x = population, y = confirmed)) + 
+  geom_point(col = "darkorange") + 
+  labs(title = "End of 2021 Population and Confirmed Cases by County in Wisconsin",
+       x = "Population",
+       y = "Cumulative Number of Confirmed Cases") 
+
+```
+
+
+### Deaths versus Population
+
+```{r pop_deaths, fig.align='center', fig.height=4}
+ggplot(End2021, aes(x = population, y = deaths)) + 
+  geom_point(col = "darkorange") + 
+  labs(title = "End of 2021 Population and Confirmed Cases by County in Wisconsin",
+       x = "Population",
+       y = "Cumulative Number of Deaths") 
+```
+
+
+EDA-2 {data-orientation=rows}
+===
+
+Row {.tabset}
+---
+
+### Minimum Confirmed Cases and Deaths
+
+We find the minimum cumulative number of confirmed cases and the minimum number of cumulative number of deaths at the beginning of the year and the corresponding counties where these values occurred. 
+
+```{r min_cases_deaths}
+min_confirmed <- df_state %>% 
+  filter(date == "2021-01-01") %>% 
+  filter(confirmed == min(confirmed)) %>% 
+  select(county, population, confirmed, deaths) 
+
+min_deaths <- df_state %>% 
+  filter(date == "2021-01-01") %>% 
+  filter(deaths == min(deaths)) %>% 
+  select(county, population, confirmed, deaths)
+
+kable(rbind(min_confirmed, min_deaths), 
+      col.names = c("County", "Population", "Confirmed", "Deaths"))
+```
+
+
+From this table, we can see that the population varies for counties with the lowest numbers of confirmed cases and deaths, but is on the lower end for the most part. Additionally, looking at a map will confirm that all of these counties are in the northern (some in the northern-most) part of Wisconsin, far away from any major cities with dense populations.
+
+### Maximum Confirmed Cases and Deaths
+
+The maximum cumulative number of confirmed cases and the maximum number of cumulative number of deaths at the beginning of the year and the corresponding counties where these values occurred are found here.
+
+```{r max_cases_deaths}
+max_confirmed <- df_state %>% 
+  filter(date == "2021-01-01") %>% 
+  filter(confirmed == max(confirmed)) %>% 
+  select(county, population, confirmed, deaths) 
+
+max_deaths <- df_state %>% 
+  filter(date == "2021-01-01") %>% 
+  filter(deaths == max(deaths)) %>% 
+  select(county, population, confirmed, deaths)
+
+kable(rbind(max_confirmed, max_deaths), 
+      col.names = c("County", "Population", "Confirmed", "Deaths"))
+```
+
+As we already knew, Milwaukee had both the highest number of confirmed cases and deaths from COVID-19. This is more than likely because of the fact that Milwaukee County has by far the highest population of any county in Wisconsin and has a very dense population as well, making it much easier for COVID-19 to spread from person to person.
+
+Vaccines
+===
+
+Column {.tabset data-width=650}
+---
+
+### Vaccines vs. Confirmed 
+
+```{r vaccines_vs_confirmed}
+ggplot(df_state %>% filter(county == "Milwaukee"), aes(x=people_vaccinated, y=confirmed)) + 
+  geom_point(color="red") + 
+  labs(title="Effect of Vaccines on Cases in Milwaukee", x="People Vaccinated", y="Confirmed Cases") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  scale_x_continuous(breaks = seq(0, 700000, by=100000), limits = c(0, 700000), labels = scales::comma) + 
+  scale_y_continuous(breaks = seq(80000, 200000, by=20000), limits = c(80000, 200000))
+
+```
+
+
+### Vaccines vs. Deaths
+
+```{r vaccines_vs_deaths}
+ggplot(df_state %>% filter(county == "Milwaukee"), aes(x=people_vaccinated, y=deaths)) + 
+  geom_point(color="red") + 
+  labs(title="Effect of Vaccines on Deaths in Milwaukee", x="People Vaccinated", y="Deaths") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  scale_x_continuous(breaks = seq(0, 700000, by=100000), limits = c(0, 700000), labels = scales::comma)
+
+```
+
+
+### Fully Vaccinated
+```{r vaccines_over_time}
+ggplot(df_state %>% filter(county == "Milwaukee"), aes(x=date, y=people_fully_vaccinated)) + 
+  geom_point(color="red") + 
+  labs(title="Full Vaccinations Over Time", x="Date", y="People Fully Vaccinated") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  scale_y_continuous(breaks = seq(0, 600000, by=100000), limits = c(0, 600000), labels = scales::comma) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  scale_x_date(date_labels = "%b-%y", date_breaks = "1 month")
+
+```
+
+Column {data-width = 650} 
+---
+
+### Analysis
+
+In this section, I decided to analyze trends having to do with vaccinations in Milwaukee County, which is Wisconsin's most densely populated area by far.
+
+For the first figure, we can see that before there were a large amount of people vaccinated in Milwaukee, the number of confirmed cases was quickly rising. However, once about 50,000 people were vaccinated up until 500,000 people, the rise in confirmed cases began to slow. After this benchmark, the number of confirmed cases began to shoot back up, likely because restrictions were lifted and people felt more safe and less worried about getting COVID-19 now that they were vaccinated.
+
+For the effect of vaccines on deaths, we see a very similar trend but it is at a much smaller scale. As vaccinations pick up at the start, the number of deaths begins to slow down. However, as huge amounts of people become vaccinated the deaths pick back up.
+
+From the third figure, we can see that the rate at which people were getting vaccinated really started to increase in mid-February. This continued until about June, when it started to slow down because so many people had already been vaccinated. Furthermore, many of the people who had not yet been vaccinated were likely choosing to not be vaccinated at all, providing us with another reason for this slow down.
+
+
+Per Capita
+===
+
+Column {.tabset data-width=850}
+---
+
+### Mid Year Stats
+
+```{r per_capita}
+# create table of per capita stats by county
+per_capita_stats <- transmute(df_state,
+                              county = county,
+                              confirmed_pc = confirmed/population,
+                              deaths_pc = deaths/population,
+                              vaxxed_pc = people_vaccinated/population,
+                              fully_vaxxed_pc = people_fully_vaccinated/population,
+                              population = population,
+                              date = date)
+
+# create two different tables - county per capita stats at end of year and middle of year
+end_year_pc <- per_capita_stats %>% 
+  filter(date == "2021-12-31") %>% 
+  arrange(desc(population))
+
+mid_year_pc <- per_capita_stats %>% 
+  filter(date == "2021-07-01") %>% 
+  arrange(desc(population))
+
+# redefine tables as just top 10 populations
+end_year_pc <- head(end_year_pc, 10)
+mid_year_pc <- head(mid_year_pc, 10)
+  
+```
+
+```{r show_per_capita_mid}
+kable(mid_year_pc, col.names = c("County", "Confirmed Cases Per Capita", "Deaths Per Capita", "Vaccinated Per Capita", "Fully Vaccinated Per Capita", "Population", "Date"))
+```
+
+### End Year Stats
+```{r show_per_capita_end}
+kable(end_year_pc, col.names = c("County", "Confirmed Cases Per Capita", "Deaths Per Capita", "Vaccinated Per Capita", "Fully Vaccinated Per Capita", "Population", "Date"))
+```
+
+Column {data-width = 650} 
+---
+
+### Analysis
+
+These two tables show the per capita stats of the 10 most populous counties in Wisconsin for the the middle of the year (July 1st) and the end of the year (December 31st).
+
+From these tables, we can see that Dane County consistently has better numbers than the other counties when it comes keeping cases and deaths low as well as vaccinations high. From these stats, one could reasonably assume that Dane County would be the best area in Wisconsin to live if you are trying to prevent COVID-19 from strongly impacting you.
+
+We can also see that from the middle of the year to the end of the year, every one of the 10 most populous counties increased their fully vaccinated per capita by at least 0.1, which is a solid improvement. However, many of them also saw noticeable increases in  confirmed cases per capita and (slightly less) noticeable increases in deaths per capita.

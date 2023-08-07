@@ -1,0 +1,179 @@
+---
+title: "Homework 5"
+author: "Christopher Bussen"
+date: "2023-02-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+# used this so that I could push the labels in the pie chart away from each other
+library(ggrepel)
+```
+
+
+1. Read the data file insurance.csv using the read_csv() function in tidyverse. 
+```{r}
+insurance <- read_csv("insurance.csv")
+```
+
+
+2. Get a glimpse of the data and indicate the number of observations and variables. 
+```{r}
+glimpse(insurance)
+count(insurance)
+ncol(insurance)
+```
+
+There are 1338 observations and 7 different variables.
+
+3. Create a bar plot of the region. Use a few sentences to summarize your finding based on the plot. 
+```{r}
+# table(insurance$region)
+ggplot(insurance, aes(x = region)) + 
+  geom_bar(fill = "blue") +
+  labs(title = "Distribution of People in each Region", x = "Region", y = "Number of People") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From the bar plot, we can can see the counts of the different observations from each region (NE, NW, SE, SW). As we can see, the counts of northeast, northwest, and southwest are all very close to each other around 325. Additionally, southeast has the highest count, likely right around 370. So, there is not a large difference between the distributions of the 4 different regions.
+
+
+
+4. Create a stack bar plot such that the region is on the x-axis, and each bar shows the distribution of smokers in that region. You should make sure that your y-axis shows percentages. 
+```{r}
+ggplot(insurance, aes(x = region, fill = smoker)) + 
+  geom_bar(position = "fill") +
+  scale_y_continuous(breaks = seq(0, 1, by = .2), labels = scales::percent) + 
+  labs(title = "Distribution of Smokers in each Region", x = "Region", y = "Percent") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+5. Create a histogram of bmi. Discuss the distribution of the histogram. 
+```{r}
+ggplot(insurance, aes(x = bmi)) +
+  geom_histogram(color = "black", fill = "red", binwidth = 2.5) + 
+  labs(title = "BMI Distribution", x = "BMI", y = "Count") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  scale_x_continuous(breaks = seq(0, 55, by = 5))
+```
+
+This histogram appears to unimodal and symmetric with a median somewhere around 30. Additionally, the range is around 40 with the maximum being close to 55 and the minimum near 15.
+
+
+6. Create a histogram of charges. Discuss the distribution of the histogram. 
+```{r}
+ggplot(insurance, aes(x = charges)) +
+  geom_histogram(color = "black", fill = "red", binwidth = 2500) + 
+  labs(title = "BMI Distribution", x = "Charges", y = "Count") + 
+  theme(plot.title = element_text(hjust = 0.5)) + 
+  scale_x_continuous(breaks = seq(0, 70000, by = 10000))
+```
+
+This histogram is unimodal and skewed right. The median appears to be somewhere around 10,000 and it has a range near 65,000 (maximum is approximately 65,000 and minimum is close to 0). Finally, there might be outliers around 55,000 and above.
+
+7. Create a boxplot that shows the distribution of bmi based on the region. Discuss what you find based on the boxplot. (Hint: you need to have x and y variables in mapping)
+```{r}
+ggplot(insurance, aes(x = region, y = bmi)) + 
+  geom_boxplot(fill = "lightblue") + 
+  labs(title = "BMI Distribution by Region", x = "Region", y = "BMI") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From these boxplots, we can see that the southeast region tends to have the highest BMI when you look at maximum, outliers, and even the median. Northeast, northwest, and southwest are all pretty similar in terms of BMI, but northeast and southwest both have maximums that are outliers whereas northwest does not. Overall, the spread (using IQR) for each region appears to be mostly similar.
+
+8. Create a scatterplot that shows the relationship between age (independent variable) and charges (dependent variable). Comment on the scatterplot. 
+```{r}
+ggplot(insurance, aes(x = age, y = charges)) + 
+  geom_point(color = "red") + 
+  labs(title = "Effect of Age on Medical Charges", x = "Age", y = "Charges") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From this scatterplot, we can see that the medical charges billed by insurance can vary greatly for people of the same age (likely due to differences in other variables such as BMI and smoking habits). However, we can also notice that as age increases, both the minimum and maximum values we see for charges tends to increase. Thus, while we know that age is not the sole factor that goes into medical charges, we can assume from the scatterplot that it does play a role.
+
+
+
+9. You should find that "charges" could be classified into several groups. Let's create a scatterplot with age as the independent variable (x), smoker as another categorical variable (color), and the response variable as charges. Comment on the scatterplot. 
+```{r}
+ggplot(insurance, aes(x = age, y = charges, color = smoker)) + 
+  geom_point() + 
+  labs(title = "Effect of Age on Medical Charges", x = "Age", y = "Charges") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+This scatterplot shows the same data as the one above, yet adds another variable for whether or not the person is a smoker. This added layer in the scatterplot shows us how most of the people with the highest medical charges tend to be smokers. We can even see that all of the people with charges above $40,000 are smokers.
+
+10. Now, create two data frames by subsetting insurance data. 
+
+smoker <- insurance[insurance$smoker=="yes",]
+nonsmoker <- insurance[insurance$smoker=="no",]
+
+```{r}
+table(insurance$smoker)
+smoker <- insurance[insurance$smoker=="yes",]
+nonsmoker <- insurance[insurance$smoker=="no",]
+```
+
+
+11. Create a scatterplot with age as the independent variable (x) and the response variable charges using the data frame smoker. Then add the smooth line. Comment on the plot. Does it make sense to use the smooth line to summarize the relationship between the age of clients and the corresponding charges? Why?
+```{r}
+ggplot(smoker, aes(x = age, y = charges)) + 
+  geom_point(color = "blue") + 
+  geom_smooth(color = "red", se = FALSE, formula = y ~ x, method = "loess") + 
+  labs(title = "Effect of Age on Medical Charges for Smokers", x = "Age", y = "Charges") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+This scatterplot shows two main groups of data, one higher and one lower. However, both groups show a general trend of medical charges increasing as age increases. This scatterplot also has several outliers close to $60,000. I would say that yes, it does make sense to use the smooth line to summarize the relationship between age of clients and the corresponding charges. This line is in between most of the data, and from looking at the table briefly, this is because the group of data below the line is for people with lower BMI while the group of data above is people with a high BMI. However, despite the smooth line being split between the data, the slope/trend of the line closely matches that of each group of the data. Therefore, the smooth line does a good job of showing the general relationship between age of a client and medical charges.
+
+12. Repeat Question 11 using the data frame nonsmoker. 
+```{r}
+ggplot(nonsmoker, aes(x = age, y = charges)) + 
+  geom_point(color = "blue") + 
+  geom_smooth(color = "red", se = FALSE, formula = y ~ x, method = "loess") + 
+  labs(title = "Effect of Age on Medical Charges for Nonsmokers", x = "Age", y = "Charges") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+Once again, this scatterplot has two main groups of data, one that is tightly packed and lower and another that is more spread out and higher. In general, the data loosely shows that as age increases, so do medical charges. Like the problem above, I would say that it does make sense to use the smooth line to summarize the relationship between age and charges. This is because it fits the tightly packed data well and shows the general trend for charges as age increases.
+
+13. Based on your finding on Questions 11 & 12, propose what you might do next if you want to model charges using other variables in this data. 
+
+After my findings in questions 11 and 12, I would look at how BMI plays a role in the relationship between charges and age. In other words, instead of subsetting the insurance data with the options for smokers, I would likely create one dataframe for people who fall in the ideal BMI range (or below) and another dataframe for people who are above the ideal BMI range. I would then go through the same process as questions 11 and 12 using the new dataframes for the plots. This would help us to show how an ideal BMI would likely lead to lower charges while a high BMI would lead to increased charges.
+
+
+14. Create a pie chart of children. Use a few sentences to summarize your finding based on the plot. (Hint: You need to convert the variable to a categorical variable first)
+```{r}
+table(insurance$children)
+insurance$children <- as.factor(insurance$children)
+children_count <- count(insurance, children)
+children_count$percent <- round(children_count$n/sum(children_count$n)*100,2)
+
+ggplot(children_count, aes(x = "", y = percent, fill = children)) + 
+  geom_bar(stat="identity", width=1, color="white") +
+  coord_polar("y", start=0) + 
+  geom_text_repel(aes(label = paste0(percent, "%")), position = position_stack(vjust = 0.5)) + 
+  theme_void() + 
+  labs(title = "Distribution of Children Covered by Insurance") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From this pie chart, we can easily see that the most common number of children covered by health insurance (or the number of dependents) is 0, at a little under 43% of all observations. The next highest percentage is 1 dependent at around 24%. From there, in order of highest percent to lowest, it goes 2 dependents around 18%, 3 dependents around 12%, and then both 4 and 5 dependents between 1% and 2%. So, this pie chart helps us easily see that the proportion of people with a certain number of dependents quickly drops as you increase it from 0.
+
+15. Create a boxplot that shows the distribution of charges based on the number of children. Discuss what you find based on the boxplot. 
+```{r}
+ggplot(insurance, aes(x = children, y = charges)) + 
+  geom_boxplot(color = "red") + 
+  labs(title = "Charges Distribution by Number of Children", x = "Children", y = "Charges") + 
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+From this boxplot, we can first see that all of the different numbers of children have outliers when it comes to medical charges. However, 0 children has the most outliers. Additionally, 0 - 3 children have pretty similar IQRs, while the IQR of 4 is slightly smaller and 5 is the smallest. 0 children has the highest maximum (which is an outlier) while 4 children has the highest median. Finally, 0 children has the smallest minimum value.
